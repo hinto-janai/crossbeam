@@ -26,7 +26,8 @@ fn epoch() {
 
 #[test]
 fn queue() {
-    let a = crossbeam::queue::ArrayQueue::new(10);
+    let c = core::num::NonZeroUsize::new(10).unwrap();
+    let a = crossbeam::queue::ArrayQueue::new(c);
     let _ = a.push(1);
     let _ = a.pop();
 }
