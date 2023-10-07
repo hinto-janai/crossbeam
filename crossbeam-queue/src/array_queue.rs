@@ -8,6 +8,7 @@ use core::cell::UnsafeCell;
 use core::fmt;
 use core::mem::MaybeUninit;
 use core::sync::atomic::{self, AtomicUsize, Ordering};
+use core::num::NonZeroUsize;
 
 use crossbeam_utils::{Backoff, CachePadded};
 
@@ -81,7 +82,16 @@ impl<T> ArrayQueue<T> {
     ///
     /// # Panics
     ///
-    /// Panics if the capacity is zero.
+    /// Panics if `capacity` was unsafely created with a `0` value.
+    ///
+    /// ```rust,should_panic
+    /// # use crossbeam_queue::ArrayQueue
+    /// # use core::num::NonZeroUsize;
+    /// let cap = unsafe { NonZeroUsize::new_unchecked(0) };
+    ///
+    /// // This panics.
+    /// let q = ArrayQueue::new(cap);
+    /// ```
     ///
     /// # Examples
     ///
@@ -90,7 +100,9 @@ impl<T> ArrayQueue<T> {
     ///
     /// let q = ArrayQueue::<i32>::new(100);
     /// ```
-    pub fn new(cap: usize) -> ArrayQueue<T> {
+    pub fn new(cap: NonZeroUsize) -> ArrayQueue<T> {
+        let cap = cap.get();
+
         assert!(cap > 0, "capacity must be non-zero");
 
         // Head is initialized to `{ lap: 0, index: 0 }`.
